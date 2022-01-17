@@ -6,7 +6,7 @@ const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5500;
 
 app.use(function (req, res, next) {
   res.setHeader(
