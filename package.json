@@ -13,5 +13,12 @@
     "express": "^4.17.2",
     "healthcheck": "^0.1.3",
     "jsonwebtoken": "^8.5.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Annika1979/jensen-backend"
+  },
+  "engines": {
+    "node": "17.x"
   }
 }
