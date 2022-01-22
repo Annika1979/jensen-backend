@@ -6,18 +6,11 @@ const credentials = {
 };
 
 const express = require("express");
-const { get } = require("express/lib/request");
-
+const cors = require("cors");
 const jwt = require("jsonwebtoken");
 
 const app = express();
 const PORT = process.env.PORT || 80;
-const path = require("path");
-
-app.use(express.static(path.join(__dirname + "build")));
-app.get("/*", (req, res) => {
-  res.sendFile(path.join());
-});
 
 app.use(function (req, res, next) {
   res.setHeader(
@@ -30,6 +23,7 @@ app.use(function (req, res, next) {
 app.use("/healthcheck", require("./routes/healthcheck.routes"));
 
 app.use(express.urlencoded({ extended: true }));
+//app.use(cors())
 app.use(express.json());
 
 app.get("/", (req, res) => {
