@@ -1,12 +1,23 @@
-const credentials = { secretUser: "user", secretPassword: "password" };
+const credentials = {
+  secretUser: "user",
+  secretPassword: "password",
+  firstUser: "Annika",
+  firstPassword: "Pannika",
+};
 
-const cors = require("cors");
 const express = require("express");
-const bodyParser = require("body-parser");
+const { get } = require("express/lib/request");
+
 const jwt = require("jsonwebtoken");
 
 const app = express();
-const PORT = process.env.PORT || 5500;
+const PORT = process.env.PORT || 80;
+const path = require("path");
+
+app.use(express.static(path.join(__dirname + "build")));
+app.get("/*", (req, res) => {
+  res.sendFile(path.join());
+});
 
 app.use(function (req, res, next) {
   res.setHeader(
@@ -19,7 +30,7 @@ app.use(function (req, res, next) {
 app.use("/healthcheck", require("./routes/healthcheck.routes"));
 
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(express.json());
 
 app.get("/", (req, res) => {
   headers = { http_status: 200, "cache-control": "no-cache" };
@@ -41,8 +52,9 @@ app.post("/authorize", (req, res) => {
   console.log(`Password ${password}`);
 
   if (
-    user === credentials.secretUser &&
-    password === credentials.secretPassword
+    (user === credentials.secretUser &&
+      password === credentials.secretPassword) ||
+    (user === credentials.firstUser && password === credentials.firstPassword)
   ) {
     console.log("Authorized");
     const token = jwt.sign(
