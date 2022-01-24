@@ -1,13 +1,14 @@
 const credentials = {
   secretUser: "user",
   secretPassword: "password",
-  firstUser: "Annika",
-  firstPassword: "Pannika",
 };
 
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const https = require("https");
+const http = require("http");
+const fs = require("fs");
 
 const app = express();
 const PORT = process.env.PORT || 80;
@@ -19,6 +20,18 @@ const PORT = process.env.PORT || 80;
 //   );
 //   next();
 // });
+
+let options = {
+  key: fs.readFileSync("backend-key.pem"),
+  cert: fs.readFileSync("backend-cert.pem"),
+};
+
+http.createServer(app).listen(8080, function () {
+  console.log("HTTP listening on 8080");
+});
+https.createServer(options, app).listen(443, function () {
+  console.log("HTTPS listening on 443");
+});
 
 app.use("/healthcheck", require("./routes/healthcheck.routes"));
 
@@ -46,9 +59,8 @@ app.post("/authorize", (req, res) => {
   console.log(`Password ${password}`);
 
   if (
-    (user === credentials.secretUser &&
-      password === credentials.secretPassword) ||
-    (user === credentials.firstUser && password === credentials.firstPassword)
+    user === credentials.secretUser &&
+    password === credentials.secretPassword
   ) {
     console.log("Authorized");
     const token = jwt.sign(
