@@ -9,17 +9,17 @@ const jwt = require("jsonwebtoken");
 const https = require("https");
 const http = require("http");
 const fs = require("fs");
+const auditLog = require("audit-log");
+const mongoose = require("mongoose");
+mongoose.Promise = global.Promise;
 
 const app = express();
 const PORT = process.env.PORT || 80;
 
-// app.use(function (req, res, next) {
-//   res.setHeader(
-//     "Content-Security-Policy",
-//     "default-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; frame-src 'self'"
-//   );
-//   next();
-// });
+auditLog.addTransport("mongoose", {
+  connectionString: "mongodb://localhost:27017/myDatabase",
+});
+auditLog.addTransport("console");
 
 let options = {
   key: fs.readFileSync("backend-key.pem"),
@@ -33,6 +33,10 @@ https.createServer(options, app).listen(443, function () {
   console.log("HTTPS listening on 443");
 });
 
+let userSchema = new mongoose.Schema({
+  user: String,
+  password: String,
+});
 app.use("/healthcheck", require("./routes/healthcheck.routes"));
 
 app.use(express.urlencoded({ extended: true }));
@@ -62,12 +66,18 @@ app.post("/authorize", (req, res) => {
     user === credentials.secretUser &&
     password === credentials.secretPassword
   ) {
+    let pluginFn = auditLog.getPlugin("mongoose", {
+      user: "user",
+      password: "password",
+    }); // setup occurs here
+    userSchema.plugin(pluginFn.handler); // .handler is the pluggable function for mongoose in this case
+
     console.log("Authorized");
     const token = jwt.sign(
       {
         data: "foobar",
       },
-      "your-secret-key-here",
+      "6LfOqhUeAAAAAIbaaTXQ7FMWusEyDFisQSHpGiLL",
       { expiresIn: 60 * 60 }
     );
 
@@ -77,8 +87,17 @@ app.post("/authorize", (req, res) => {
     console.log("Not authorized");
     res.status(200).send({ STATUS: "FAILURE" });
   }
+  auditLog.logEvent("user", "password");
 });
 
 app.listen(PORT, () => {
   console.log(`STARTED LISTENING ON PORT ${PORT}`);
 });
+
+// app.use(function (req, res, next) {
+//   res.setHeader(
+//     "Content-Security-Policy",
+//     "default-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; frame-src 'self'"
+//   );
+//   next();
+// });
