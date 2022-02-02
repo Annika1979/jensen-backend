@@ -10,16 +10,9 @@ const https = require("https");
 const http = require("http");
 const fs = require("fs");
 const auditLog = require("audit-log");
-const mongoose = require("mongoose");
-mongoose.Promise = global.Promise;
 
 const app = express();
 const PORT = process.env.PORT || 80;
-
-auditLog.addTransport("mongoose", {
-  connectionString: "mongodb://localhost:27017/myDatabase",
-});
-auditLog.addTransport("console");
 
 let options = {
   key: fs.readFileSync("backend-key.pem"),
@@ -33,10 +26,6 @@ https.createServer(options, app).listen(443, function () {
   console.log("HTTPS listening on 443");
 });
 
-let userSchema = new mongoose.Schema({
-  user: String,
-  password: String,
-});
 app.use("/healthcheck", require("./routes/healthcheck.routes"));
 
 app.use(express.urlencoded({ extended: true }));
@@ -66,13 +55,14 @@ app.post("/authorize", (req, res) => {
     user === credentials.secretUser &&
     password === credentials.secretPassword
   ) {
-    let pluginFn = auditLog.getPlugin("mongoose", {
-      user: "user",
-      password: "password",
-    }); // setup occurs here
-    userSchema.plugin(pluginFn.handler); // .handler is the pluggable function for mongoose in this case
-
+    auditLog.addTransport("console");
+    auditLog.logEvent(
+      `user with the credentials ${user} and password ${password} just logged in`,
+      "https://annika-backend.herokuapp.com/authorize",
+      "logged in"
+    );
     console.log("Authorized");
+
     const token = jwt.sign(
       {
         data: "foobar",
