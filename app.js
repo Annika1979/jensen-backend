@@ -1,36 +1,26 @@
-const credentials = {
-  secretUser: "user",
-  secretPassword: "password",
-};
+const credentials = { secretUser: "user", secretPassword: "password" };
 
-const express = require("express");
-const cors = require("cors");
-const jwt = require("jsonwebtoken");
-//const https = require("https");
-const http = require("http");
-const fs = require("fs");
 const auditLog = require("audit-log");
+const cors = require("cors");
+const express = require("express");
+const bodyParser = require("body-parser");
+const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const https = require("https");
 
 const app = express();
-const PORT = process.env.PORT || 80;
+
+const PORT = process.env.PORT || 3000;
 
 let options = {
   key: fs.readFileSync("backend-key.pem"),
   cert: fs.readFileSync("backend-cert.pem"),
 };
 
-http.createServer(app).listen(8080, function () {
-  console.log("HTTP listening on 8080");
-});
-//https.createServer(options, app).listen(443, function () {
-//console.log("HTTPS listening on 443");
-//});
-
-app.use("/healthcheck", require("./routes/healthcheck.routes"));
+app.use("./healthcheck", require("./routes/healthcheck.routes"));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-app.use(express.json());
 
 app.get("/", (req, res) => {
   headers = { http_status: 200, "cache-control": "no-cache" };
@@ -46,10 +36,13 @@ app.get("/health", (req, res) => {
 
 app.post("/authorize", (req, res) => {
   // Insert Login Code Here
+
   let user = req.body.user;
   let password = req.body.password;
   console.log(`User ${user}`);
   console.log(`Password ${password}`);
+
+  //   app.use(auditLogExpress.middleware);
 
   if (
     user === credentials.secretUser &&
@@ -57,17 +50,18 @@ app.post("/authorize", (req, res) => {
   ) {
     auditLog.addTransport("console");
     auditLog.logEvent(
-      `user with the credentials ${user} and password ${password} just logged in`,
+      ` The user with the username: ${user} and password: ${password}`,
       "https://annika-backend.herokuapp.com/authorize",
       "logged in"
     );
     console.log("Authorized");
-
     const token = jwt.sign(
       {
         data: "foobar",
+
+        // deepcode ignore HardcodedSecret: <please specify a reason of ignoring this>
       },
-      "6LfOqhUeAAAAAIbaaTXQ7FMWusEyDFisQSHpGiLL",
+      "your-secret-key-here",
       { expiresIn: 60 * 60 }
     );
 
@@ -77,17 +71,8 @@ app.post("/authorize", (req, res) => {
     console.log("Not authorized");
     res.status(200).send({ STATUS: "FAILURE" });
   }
-  auditLog.logEvent("user", "password");
 });
 
 app.listen(PORT, () => {
   console.log(`STARTED LISTENING ON PORT ${PORT}`);
 });
-
-// app.use(function (req, res, next) {
-//   res.setHeader(
-//     "Content-Security-Policy",
-//     "default-src 'self'; font-src 'self'; img-src 'self'; script-src 'self'; style-src 'self'; frame-src 'self'"
-//   );
-//   next();
-// });
