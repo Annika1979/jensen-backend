@@ -22,9 +22,9 @@ let options = {
 http.createServer(app).listen(8080, function () {
   console.log("HTTP listening on 8080");
 });
-https.createServer(options, app).listen(443, function () {
-  console.log("HTTPS listening on 443");
-});
+//https.createServer(options, app).listen(443, function () {
+//console.log("HTTPS listening on 443");
+//});
 
 app.use("/healthcheck", require("./routes/healthcheck.routes"));
 
