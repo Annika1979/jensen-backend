@@ -6,19 +6,17 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
-const https = require("https");
-
 const app = express();
-
 const PORT = process.env.PORT || 3000;
 
+//open SSL our own cert that we created.
 let options = {
   key: fs.readFileSync("backend-key.pem"),
   cert: fs.readFileSync("backend-cert.pem"),
 };
 
+// healthcheck can be used for the monitoring can be checked via for exampel Pingdom
 app.use("./healthcheck", require("./routes/healthcheck.routes"));
-
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
@@ -28,12 +26,13 @@ app.get("/", (req, res) => {
   res.status(200).send(body);
 });
 
-app.get("/health", (req, res) => {
+app.get("/healthcheck", (req, res) => {
   headers = { http_status: 200, "cache-control": "no-cache" };
   body = { status: "available" };
   res.status(200).send(body);
 });
 
+// the authorization that we connect to the front end
 app.post("/authorize", (req, res) => {
   // Insert Login Code Here
 
@@ -58,8 +57,6 @@ app.post("/authorize", (req, res) => {
     const token = jwt.sign(
       {
         data: "foobar",
-
-        // deepcode ignore HardcodedSecret: <please specify a reason of ignoring this>
       },
       "your-secret-key-here",
       { expiresIn: 60 * 60 }
