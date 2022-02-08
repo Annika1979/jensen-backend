@@ -15,8 +15,8 @@ let options = {
   cert: fs.readFileSync("backend-cert.pem"),
 };
 
-// healthcheck can be used for the monitoring can be checked via for exampel Pingdom
-app.use("./healthcheck", require("./routes/healthcheck.routes"));
+// healthcheck can be used for the monitoring can be checked via for exampel Pingdom or localhost:3000/healthcheck
+app.use("/healthcheck", require("./routes/healthcheck.routes"));
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
